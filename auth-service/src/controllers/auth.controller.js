@@ -58,7 +58,7 @@ exports.login = async (req, res) => {
         role: user.role,
       },
       env.jwtSecret,
-      { expiresIn: "1h" }
+      { expiresIn: "2d" }
     );
 
     res.status(200).json({
@@ -71,6 +71,12 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Login Failed", err });
+    res.status(500).json({ message: "Login Failed", err: err.message });
   }
+};
+
+exports.logout = async (req, res) => {
+  res.json({
+    message: "Logout successfull.",
+  });
 };
