@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.use("/api/auth", require("./routes/auth.routes"));
 
-// app.use("/users", require("./routes/user.routes"));
+app.use("/api/users", require("./routes/user.routes"));
 
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
