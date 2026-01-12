@@ -7,9 +7,17 @@ exports.addProduct = async (req, res) => {
       ...req.body,
       createdBy: req.user.id,
     });
-    res.status(201).json({ product });
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      data: product,
+      error: null,
+    });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: "Failed to create product",
+      data: null,
       error: err.message,
     });
   }
@@ -23,15 +31,24 @@ exports.delProduct = async (req, res) => {
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
+        success: false,
         message: "product not found",
+        data: null,
+        error: null,
       });
     }
     await Product.findByIdAndDelete(id);
     res.status(200).json({
+      success: true,
       message: "Product deleted successfully",
+      data: null,
+      error: null,
     });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: "Failed to delete product",
+      data: null,
       error: err.message,
     });
   }
@@ -44,7 +61,10 @@ exports.updateProduct = async (req, res) => {
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
+        success: false,
         message: "Product not found",
+        data: null,
+        error: null,
       });
     }
     const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
@@ -53,11 +73,16 @@ exports.updateProduct = async (req, res) => {
     });
 
     res.status(200).json({
+      success: true,
       message: "Product updated successfully",
-      updatedProduct,
+      data: updatedProduct,
+      error: null,
     });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: "Failed to update product!",
+      data: null,
       error: err.message,
     });
   }
@@ -68,9 +93,17 @@ exports.updateProduct = async (req, res) => {
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find();
-    res.status(200).json({ products });
+    res.status(200).json({
+      success: true,
+      message: "Products find successfully",
+      data: products,
+      error: null,
+    });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: "failed to fetch products",
+      data: null,
       error: err.message,
     });
   }
