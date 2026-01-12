@@ -22,15 +22,22 @@ exports.signup = async (req, res) => {
       role: role || "user",
     });
     res.status(201).json({
+      success: true,
       message: "User ragistered successfully",
-      user: {
+      data: {
         id: user._id,
         email: user.email,
         role: user.role,
       },
+      error: null,
     });
   } catch (err) {
-    res.status(500).json({ message: "signup failed" });
+    res.status(500).json({
+      success: false,
+      message: "signup failed",
+      data: null,
+      error: err.message,
+    });
   }
 };
 
@@ -43,12 +50,22 @@ exports.login = async (req, res) => {
     //find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid user or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid user or password",
+        data: null,
+        error: null,
+      });
     }
     //compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid user or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid user or password",
+        data: null,
+        error: null,
+      });
     }
 
     //generate token
@@ -62,21 +79,31 @@ exports.login = async (req, res) => {
     );
 
     res.status(200).json({
+      success: true,
       message: "Login Successful",
       token,
-      user: {
+      data: {
         id: user._id,
         name: user.name,
         role: user.role,
       },
+      error: null,
     });
   } catch (err) {
-    res.status(500).json({ message: "Login Failed", err: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Login Failed",
+      data: null,
+      err: err.message,
+    });
   }
 };
 
 exports.logout = async (req, res) => {
   res.json({
+    success: true,
     message: "Logout successfull.",
+    data: null,
+    error: null,
   });
 };
