@@ -7,14 +7,14 @@
 
 const express = require("express");
 const router = express.Router();
-const productController = require("../controllers/user.controller");
+const productController = require("../controllers/product.controller");
 const verifyToken = require("../middlewares/verifyToken");
 const isAdmin = require("../middlewares/isAdmin");
 
 //Add_product
 /**
  * @swagger
- * /api/users/add:
+ * /api/products/add:
  *   post:
  *     summary: Add a new product (Admin only)
  *     tags: [Products]
@@ -53,7 +53,7 @@ router.post("/add", verifyToken, isAdmin, productController.addProduct);
 //Update_Product
 /**
  * @swagger
- * /api/users/update/{id}:
+ * /api/products/{id}:
  *   put:
  *     summary: Update product (Admin only)
  *     tags: [Products]
@@ -92,17 +92,12 @@ router.post("/add", verifyToken, isAdmin, productController.addProduct);
  *       404:
  *         description: Product not found
  */
-router.put(
-  "/update/:id",
-  verifyToken,
-  isAdmin,
-  productController.updateProduct
-);
+router.put("/:id", verifyToken, isAdmin, productController.updateProduct);
 
 //Delete_Product
 /**
  * @swagger
- * /api/users/del/{id}:
+ * /api/products/{id}:
  *   delete:
  *     summary: Delete product (Admin only)
  *     tags: [Products]
@@ -125,12 +120,12 @@ router.put(
  *       404:
  *         description: Product not found
  */
-router.delete("/del/:id", verifyToken, isAdmin, productController.delProduct);
+router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
 
 //View_Product
 /**
  * @swagger
- * /api/users/view:
+ * /api/products/view:
  *   get:
  *     summary: Get all products
  *     tags: [Products]
