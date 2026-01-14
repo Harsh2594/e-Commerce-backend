@@ -62,3 +62,27 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
+
+//get_profile
+exports.getProfile = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: "fetch user successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get user details",
+      data: null,
+      error: err.message,
+    });
+  }
+};
