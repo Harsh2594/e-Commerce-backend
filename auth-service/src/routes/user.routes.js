@@ -72,4 +72,51 @@ router.put("/changePassword", verifyToken, userController.changePassword);
  *         description: Internal server error
  */
 router.get("/User-Profile", verifyToken, userController.getProfile);
+
+//update_Profile
+/**
+ * @swagger
+ * /api/users/update-profile/{id}:
+ *   put:
+ *     summary: Update User profile
+ *     tags: [Users Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: User ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: harsh
+ *     responses:
+ *       200:
+ *         description: User profile updated successfully changed
+ *         content:
+ *           application/json:
+ *             schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: Profile updated successfully
+ *       400:
+ *         description: No valid fields to update
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/update-profile/:id", verifyToken, userController.updateProfile);
+
 module.exports = router;
