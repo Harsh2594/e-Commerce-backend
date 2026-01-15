@@ -10,6 +10,8 @@ const router = express.Router();
 const authController = require("../controllers/auth.controller");
 const validateEmail = require("../middlewares/validateEmail");
 const verifyToken = require("../middlewares/verifyToken");
+const loginValidation = require("../middlewares/loginValidation");
+const validatePassword = require("../middlewares/validatePassword");
 
 //signup
 /**
@@ -48,7 +50,7 @@ const verifyToken = require("../middlewares/verifyToken");
  *       201:
  *         description: User registered successfully
  */
-router.post("/signup", authController.signup);
+router.post("/signup", validateEmail, validatePassword, authController.signup);
 //login
 /**
  * @swagger
@@ -76,7 +78,7 @@ router.post("/signup", authController.signup);
  *       401:
  *         description: Invalid credentials
  */
-router.post("/login", authController.login);
+router.post("/login", loginValidation, authController.login);
 //logout
 router.post("/logout", authController.logout);
 //Forgot_Password
