@@ -62,6 +62,10 @@ router.put("/changePassword", verifyToken, userController.changePassword);
  *                 type: string
  *               email:
  *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *               address:
+ *                 type: string
  *               role:
  *                 type: string
  *       401:
@@ -99,6 +103,12 @@ router.get("/User-Profile", verifyToken, userController.getProfile);
  *               name:
  *                 type: string
  *                 example: harsh
+ *               phoneNumber:
+ *                 type: string
+ *                 example:9800000000
+ *               address:
+ *                 type: string
+ *                 example: Kanpur Nagar
  *     responses:
  *       200:
  *         description: User profile updated successfully changed
