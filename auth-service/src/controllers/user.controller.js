@@ -66,21 +66,62 @@ exports.changePassword = async (req, res) => {
 //get_profile
 exports.getProfile = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found",
+        data: null,
+        error: null,
+      });
+    }
     return res.status(200).json({
       success: true,
-      message: "fetch user successfully",
-      data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      message: "User found",
+      data: { user },
       error: null,
     });
   } catch (err) {
     return res.status(500).json({
       success: false,
       message: "Failed to get user details",
+      data: null,
+      error: err.message,
+    });
+  }
+};
+
+//update_profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const allowedFields = ["name"];
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields to update",
+        data: null,
+        error: err.message,
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: { user: updatedUser },
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
       data: null,
       error: err.message,
     });
