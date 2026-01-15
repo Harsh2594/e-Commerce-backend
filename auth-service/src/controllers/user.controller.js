@@ -94,7 +94,7 @@ exports.getProfile = async (req, res) => {
 //update_profile
 exports.updateProfile = async (req, res) => {
   try {
-    const allowedFields = ["name"];
+    const allowedFields = ["name", "phoneNumber", "address"];
     const updates = {};
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
