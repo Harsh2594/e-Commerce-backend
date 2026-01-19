@@ -1,16 +1,21 @@
 require("./config/db");
 const express = require("express");
+const path = require("path");
 
 const app = express();
 
 //Allows backend to read JSON request bodies
 app.use(express.json());
 
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
 app.use("/api/auth", require("./routes/auth.routes"));
 
 app.use("/api/products", require("./routes/product.routes"));
 
 app.use("/api/users", require("./routes/user.routes"));
+
+app.use("/api/uploads", require("./routes/upload.routes"));
 
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
