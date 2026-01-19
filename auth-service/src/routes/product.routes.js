@@ -137,4 +137,25 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  */
 router.get("/view", verifyToken, productController.getProducts);
 
+//View_product_By_Id
+/**
+ * @swagger
+ * /api/products/view/{id}:
+ *   get:
+ *     summary: Get Product By ID
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Product ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Products fetched successfully
+ */
+router.get("/view/:id", verifyToken, productController.getProductById);
 module.exports = router;
