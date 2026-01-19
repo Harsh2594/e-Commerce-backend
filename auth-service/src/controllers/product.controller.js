@@ -108,3 +108,74 @@ exports.getProducts = async (req, res) => {
     });
   }
 };
+
+//view_product_by_id
+
+exports.getProductById = async (req, res) => {
+  const { id } = req.params;
+  if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(404).json({
+      success: false,
+      message: "Invalid product ID",
+      data: null,
+      error: null,
+    });
+  }
+  const product = await Product.findById(id);
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+      data: product,
+      error: null,
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Product found successfully",
+    data: product,
+    error: null,
+  });
+};
+
+//Product_search_By_keyword
+exports.searchProduct = async (req, res) => {
+  try {
+    const { keyword } = req.query;
+
+    if (!keyword) {
+      return res.status(400).json({
+        success: false,
+        message: "Search keyword is required",
+        data: null,
+        error: null,
+      });
+    }
+    const products = await Product.find({
+      $or: [
+        {
+          name: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        { description: { $regex: keyword, $options: "i" } },
+        { cetegory: { $regex: keyword, $options: "i" } },
+      ],
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      count: products.length,
+      products,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Not able to fetch products",
+      data: null,
+      error: err.message,
+    });
+  }
+};
