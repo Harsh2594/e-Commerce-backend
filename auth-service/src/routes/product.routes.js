@@ -40,6 +40,9 @@ const isAdmin = require("../middlewares/isAdmin");
  *               description:
  *                 type: string
  *                 example: Latest Apple iPhone
+ *               cetegory:
+ *                 type: string
+ *                 example: Electronics
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -82,6 +85,9 @@ router.post("/add", verifyToken, isAdmin, productController.addProduct);
  *               description:
  *                 type: string
  *                 example: Updated product description
+ *               category:
+ *                 type: string
+ *                 example: Electronics
  *     responses:
  *       200:
  *         description: Product updated successfully
@@ -158,4 +164,120 @@ router.get("/view", verifyToken, productController.getProducts);
  *         description: Products fetched successfully
  */
 router.get("/view/:id", verifyToken, productController.getProductById);
+
+//Product_search_By_keyword
+/**
+ * @swagger
+ * /api/products/searchProducts:
+ *   get:
+ *     summary: Search products by keyword
+ *     description: Search products using keyword in name, description, or category. Requires JWT authentication.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Keyword to search product by name, description, or category
+ *     responses:
+ *       200:
+ *         description: Products fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Products fetched successfully
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64f123abc456
+ *                       name:
+ *                         type: string
+ *                         example: iPhone 14
+ *                       description:
+ *                         type: string
+ *                         example: Latest Apple smartphone
+ *                       category:
+ *                         type: string
+ *                         example: Electronics
+ *                       price:
+ *                         type: number
+ *                         example: 79999
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       400:
+ *         description: Search keyword is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Search keyword is required
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized access
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: Invalid or missing token
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: Something went wrong
+ */
+router.get("/searchProducts", verifyToken, productController.searchProduct);
+
 module.exports = router;
