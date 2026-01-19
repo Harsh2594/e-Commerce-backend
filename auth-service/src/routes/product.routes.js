@@ -43,6 +43,9 @@ const isAdmin = require("../middlewares/isAdmin");
  *               cetegory:
  *                 type: string
  *                 example: Electronics
+ *               brand:
+ *                 type: string
+ *                 example: Apple
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -88,6 +91,9 @@ router.post("/add", verifyToken, isAdmin, productController.addProduct);
  *               category:
  *                 type: string
  *                 example: Electronics
+ *               brand:
+ *                 type: string
+ *                 example: Apple
  *     responses:
  *       200:
  *         description: Product updated successfully
@@ -280,4 +286,85 @@ router.get("/view/:id", verifyToken, productController.getProductById);
  */
 router.get("/searchProducts", verifyToken, productController.searchProduct);
 
+//Filter_Product
+/**
+ * @swagger
+ * /api/products/filter:
+ *   get:
+ *     summary: Filter products
+ *     description: Filter products by category, brand, and price range. Requires JWT authentication.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: brand
+ *         schema:
+ *           type: string
+ *         description: Filter products by brand
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum product price
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum product price
+ *     responses:
+ *       200:
+ *         description: Products filtered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product filter successfully
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64f123abc456
+ *                       name:
+ *                         type: string
+ *                         example: iPhone 14
+ *                       category:
+ *                         type: string
+ *                         example: Electronics
+ *                       brand:
+ *                         type: string
+ *                         example: Apple
+ *                       price:
+ *                         type: number
+ *                         example: 79999
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       400:
+ *         description: Invalid filter parameters
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
+router.get("/filter", verifyToken, productController.filterProducts);
 module.exports = router;
