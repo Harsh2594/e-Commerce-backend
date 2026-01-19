@@ -179,3 +179,36 @@ exports.searchProduct = async (req, res) => {
     });
   }
 };
+
+//filter_Products
+exports.filterProducts = async (req, res) => {
+  try {
+    const { category, minPrice, maxPrice, brand } = req.query;
+    let filter = {};
+    if (category) {
+      filter.category = category;
+    }
+    if (brand) {
+      filter.brand = brand;
+    }
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    const products = await Product.find(filter);
+    return res.status(200).json({
+      success: true,
+      message: "Product filter successfully",
+      count: products.length,
+      products,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      error: null,
+    });
+  }
+};
