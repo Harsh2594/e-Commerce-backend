@@ -365,6 +365,61 @@ router.get("/searchProducts", verifyToken, productController.searchProduct);
  *       500:
  *         description: Server error
  */
-
 router.get("/filter", verifyToken, productController.filterProducts);
+
+//update status
+/**
+ * @swagger
+ * /api/products/{id}/status:
+ *   patch:
+ *     summary: Update product status
+ *     description: Update the status of a product. Only admin users can perform this action.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum:
+ *                   - active
+ *                   - inactive
+ *                   - out of stock
+ *                   - discontinued
+ *                 example: active
+ *     responses:
+ *       200:
+ *         description: Product status updated successfully
+ *       400:
+ *         description: Invalid product status
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
+router.patch(
+  "/:id/status",
+  verifyToken,
+  isAdmin,
+  productController.productStatus,
+);
 module.exports = router;
