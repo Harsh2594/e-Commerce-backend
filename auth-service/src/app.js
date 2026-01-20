@@ -17,6 +17,8 @@ app.use("/api/users", require("./routes/user.routes"));
 
 app.use("/api/uploads", require("./routes/upload.routes"));
 
+app.use("/api/category", require("./routes/category.routes"));
+
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
