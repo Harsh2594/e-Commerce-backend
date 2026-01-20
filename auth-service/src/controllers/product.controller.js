@@ -212,3 +212,50 @@ exports.filterProducts = async (req, res) => {
     });
   }
 };
+
+//Product_status
+exports.productStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowedStatus = [
+      "active",
+      "inactive",
+      "out of stock",
+      "discontinued",
+    ];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product status",
+        data: null,
+        error: null,
+      });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+        error: null,
+      });
+    }
+    product.status = status;
+    await product.save();
+    return res.status(200).json({
+      success: true,
+      message: "Product status updated successfully",
+      data: null,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      error: err.message,
+    });
+  }
+};
