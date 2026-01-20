@@ -143,6 +143,24 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *     tags: [Products]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number to fetch
+ *         example: 2
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 5
+ *         description: Number of products per page
+ *         example: 10
  *     responses:
  *       200:
  *         description: Products fetched successfully
