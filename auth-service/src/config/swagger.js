@@ -4,7 +4,7 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "e-Commerce Service API",
+      title: "Auth Service API",
       version: "1.0.0",
       description: "Swagger documentation for Auth & User APIs",
     },

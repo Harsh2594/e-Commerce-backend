@@ -1,7 +1,7 @@
 /**
  * @swagger
  * tags:
- *   name: Products
+ *   name: Product
  *   description: Product Management APIs
  */
 
@@ -40,10 +40,9 @@ const isAdmin = require("../middlewares/isAdmin");
  *               description:
  *                 type: string
  *                 example: Latest Apple iPhone
- *               category:
+ *               cetegory:
  *                 type: string
- *                 description: Category ID (MongoDB ObjectId)
- *                 example: 66c9a8f2a9e3a7b9c1234567
+ *                 example: Electronics
  *               brand:
  *                 type: string
  *                 example: Apple
@@ -152,7 +151,7 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *           minimum: 1
  *           default: 1
  *         description: Page number to fetch
- *         example: 1
+ *         example: 2
  *       - in: query
  *         name: limit
  *         schema:
@@ -161,7 +160,7 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *           maximum: 50
  *           default: 5
  *         description: Number of products per page
- *         example: 5
+ *         example: 10
  *     responses:
  *       200:
  *         description: Products fetched successfully
