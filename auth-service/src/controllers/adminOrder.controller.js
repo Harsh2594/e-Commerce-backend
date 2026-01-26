@@ -8,7 +8,7 @@ exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate("user", "name email")
-      .populate("items.product", "name price");
+      .populate("items.product", "productName");
     return res.status(200).json({
       success: true,
       message: orders.length ? "orders found" : "No orders found",
