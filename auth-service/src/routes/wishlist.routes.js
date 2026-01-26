@@ -9,6 +9,7 @@ const express = require("express");
 const router = express.Router();
 const wishlistController = require("../controllers/wishlist.controller");
 const verifyToken = require("../middlewares/verifyToken");
+const notAnAdmin = require("../middlewares/notAnAdmin");
 
 //Add_to_wishlist
 /**
@@ -44,7 +45,7 @@ const verifyToken = require("../middlewares/verifyToken");
  *         description: Server error
  */
 
-router.post("/add", verifyToken, wishlistController.addToWishlist);
+router.post("/add", verifyToken, notAnAdmin, wishlistController.addToWishlist);
 
 //Get_wishlist
 /**
@@ -64,7 +65,7 @@ router.post("/add", verifyToken, wishlistController.addToWishlist);
  *         description: Server error
  */
 
-router.get("/", verifyToken, wishlistController.getWishlist);
+router.get("/", verifyToken, notAnAdmin, wishlistController.getWishlist);
 
 //Remove_item_from_wishlist
 /**
@@ -93,6 +94,11 @@ router.get("/", verifyToken, wishlistController.getWishlist);
  *         description: Server error
  */
 
-router.delete("/remove/:productId", verifyToken, wishlistController.removeItem);
+router.delete(
+  "/remove/:productId",
+  verifyToken,
+  notAnAdmin,
+  wishlistController.removeItem,
+);
 
 module.exports = router;
