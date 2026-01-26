@@ -105,7 +105,7 @@ router.get("/User-Profile", verifyToken, userController.getProfile);
  *                 example: harsh
  *               phoneNumber:
  *                 type: string
- *                 example:9800000000
+ *                 example: 9898989898
  *               address:
  *                 type: string
  *                 example: Kanpur Nagar
