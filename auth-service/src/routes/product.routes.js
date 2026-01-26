@@ -1,7 +1,7 @@
 /**
  * @swagger
  * tags:
- *   name: Product
+ *   name: Products
  *   description: Product Management APIs
  */
 
