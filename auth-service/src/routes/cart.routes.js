@@ -9,6 +9,7 @@ const express = require("express");
 const router = express.Router();
 const cartController = require("../controllers/cart.controller");
 const verifyToken = require("../middlewares/verifyToken");
+const notAnAdmin = require("../middlewares/notAnAdmin");
 
 //Cart_API
 
@@ -51,7 +52,7 @@ const verifyToken = require("../middlewares/verifyToken");
  *       500:
  *         description: Server error
  */
-router.post("/add", verifyToken, cartController.addToCart);
+router.post("/add", verifyToken, notAnAdmin, cartController.addToCart);
 
 //Get_cart_items
 /**
@@ -74,7 +75,7 @@ router.post("/add", verifyToken, cartController.addToCart);
  *       500:
  *         description: Server error
  */
-router.get("/", verifyToken, cartController.getCart);
+router.get("/", verifyToken, notAnAdmin, cartController.getCart);
 
 //Update_cart
 /**
@@ -114,7 +115,7 @@ router.get("/", verifyToken, cartController.getCart);
  *       500:
  *         description: Server error
  */
-router.put("/update", verifyToken, cartController.updateCart);
+router.put("/update", verifyToken, notAnAdmin, cartController.updateCart);
 
 //Delete_cart_item
 /**
@@ -144,6 +145,11 @@ router.put("/update", verifyToken, cartController.updateCart);
  *       500:
  *         description: Server error
  */
-router.delete("/remove/:productId", verifyToken, cartController.removeProduct);
+router.delete(
+  "/remove/:productId",
+  verifyToken,
+  notAnAdmin,
+  cartController.removeProduct,
+);
 
 module.exports = router;
