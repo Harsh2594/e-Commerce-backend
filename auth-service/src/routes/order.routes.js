@@ -9,6 +9,7 @@ const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/order.controller");
 const verifyToken = require("../middlewares/verifyToken");
+const notAnAdmin = require("../middlewares/notAnAdmin");
 
 //create_order_routes
 /**
@@ -129,7 +130,7 @@ const verifyToken = require("../middlewares/verifyToken");
  *         description: Failed to create order
  */
 
-router.post("/create", verifyToken, orderController.createOrder);
+router.post("/create", verifyToken, notAnAdmin, orderController.createOrder);
 
 //get_orders_routes
 /**
@@ -216,7 +217,7 @@ router.post("/create", verifyToken, orderController.createOrder);
  *         description: Failed to fetch orders
  */
 
-router.get("/my-orders", verifyToken, orderController.getOrders);
+router.get("/my-orders", verifyToken, notAnAdmin, orderController.getOrders);
 
 //get_orders_by_id
 /**
@@ -316,6 +317,6 @@ router.get("/my-orders", verifyToken, orderController.getOrders);
  *         description: Failed to fetch orders
  */
 
-router.get("/:orderId", verifyToken, orderController.getOrdersById);
+router.get("/:orderId", verifyToken, notAnAdmin, orderController.getOrdersById);
 
 module.exports = router;
