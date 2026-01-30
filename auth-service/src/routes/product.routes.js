@@ -10,6 +10,8 @@ const router = express.Router();
 const productController = require("../controllers/product.controller");
 const verifyToken = require("../middlewares/verifyToken");
 const isAdmin = require("../middlewares/isAdmin");
+const notAnAdmin = require("../middlewares/notAnAdmin");
+const reviewController = require("../controllers/review.controller");
 
 //Add_product
 /**
@@ -40,7 +42,7 @@ const isAdmin = require("../middlewares/isAdmin");
  *               description:
  *                 type: string
  *                 example: Latest Apple iPhone
- *               cetegory:
+ *               category:
  *                 type: string
  *                 example: Electronics
  *               brand:
@@ -151,7 +153,7 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *           minimum: 1
  *           default: 1
  *         description: Page number to fetch
- *         example: 2
+ *         example: 1
  *       - in: query
  *         name: limit
  *         schema:
@@ -160,7 +162,7 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *           maximum: 50
  *           default: 5
  *         description: Number of products per page
- *         example: 10
+ *         example: 5
  *     responses:
  *       200:
  *         description: Products fetched successfully
@@ -440,4 +442,258 @@ router.patch(
   isAdmin,
   productController.productStatus,
 );
+
+//Like_product
+/**
+ * @swagger
+ * /api/products/{productId}/like:
+ *   post:
+ *     summary: Like or unlike a product
+ *     description: Like or unlike a product. If the product is already liked by the user, it will be unliked. User access only.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product liked or unliked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product liked
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     likesCount:
+ *                       type: integer
+ *                       example: 10
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin not allowed
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Failed to like product
+ */
+router.post(
+  "/:productId/like",
+  verifyToken,
+  notAnAdmin,
+  productController.likeProduct,
+);
+//Unlike_product
+/**
+ * @swagger
+ * /api/products/{productId}/unlike:
+ *   post:
+ *     summary: Unlike a product
+ *     description: Unlike a product that was previously liked by the user. User access only.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product unliked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product unliked
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     likesCount:
+ *                       type: integer
+ *                       example: 4
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       400:
+ *         description: Product is not liked yet
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Product is not liked yet
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin not allowed
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Failed to unlike product
+ */
+router.post(
+  "/:productId/unlike",
+  verifyToken,
+  notAnAdmin,
+  productController.unlikeProduct,
+);
+
+//get_product_like counts
+/**
+ * @swagger
+ * /api/products/{productId}/likes:
+ *   get:
+ *     summary: Get product likes count
+ *     description: Fetch total number of likes for a specific product. Requires JWT authentication.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Likes fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Likes fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalLikes:
+ *                       type: integer
+ *                       example: 12
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Failed to fetch likes
+ */
+router.get("/:productId/likes", verifyToken, productController.likesCount);
+
+//get_product_review
+/**
+ * @swagger
+ * /api/products/{productId}/reviews:
+ *   get:
+ *     summary: Get product reviews
+ *     description: Fetch all reviews for a specific product along with average rating. Requires JWT authentication.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Reviews fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Reviews fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalReviews:
+ *                       type: integer
+ *                       example: 3
+ *                     averageRating:
+ *                       type: number
+ *                       example: 4.3
+ *                     reviews:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 64review123456
+ *                           rating:
+ *                             type: integer
+ *                             example: 5
+ *                           comment:
+ *                             type: string
+ *                             example: Excellent product!
+ *                           user:
+ *                             type: object
+ *                             properties:
+ *                               name:
+ *                                 type: string
+ *                                 example: John Doe
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Failed to fetch reviews
+ */
+router.get("/:productId/reviews", verifyToken, reviewController.getReviews);
 module.exports = router;
