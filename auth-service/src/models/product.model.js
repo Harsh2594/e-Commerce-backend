@@ -17,6 +17,17 @@ const productSchema = new mongoose.Schema({
     enum: ["active", "inactive", "out of stock", "discontinued"],
     default: "active",
   },
+  averageRating: {
+    type: Number,
+  },
+  totalReview: {
+    type: Number,
+    default: 0,
+  },
+  likesCount: {
+    type: Number,
+    default: 0,
+  },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
