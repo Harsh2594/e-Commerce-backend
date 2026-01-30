@@ -1,4 +1,6 @@
 const Product = require("../models/product.model");
+const Review = require("../models/review.model");
+const Like = require("../models/like.model");
 
 //Add_Product
 exports.addProduct = async (req, res) => {
@@ -38,7 +40,7 @@ exports.delProduct = async (req, res) => {
       });
     }
     await Product.findByIdAndDelete(id);
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Product deleted successfully",
       data: null,
@@ -143,6 +145,36 @@ exports.getProductById = async (req, res) => {
     data: product,
     error: null,
   });
+};
+
+//Product_Reviews_by_product_Id
+exports.reviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findOne(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product Not found",
+        data: null,
+        error: null,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Review find successfully",
+      data: product.averageRating,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Not able to find review",
+      data: null,
+      error: err.message,
+    });
+  }
 };
 
 //Product_search_By_keyword
@@ -261,6 +293,144 @@ exports.productStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error",
+      data: null,
+      error: err.message,
+    });
+  }
+};
+
+//Like_Product
+exports.likeProduct = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+        error: null,
+      });
+    }
+
+    const alreadyLikes = await Like.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (alreadyLikes) {
+      await Like.findByIdAndDelete(alreadyLikes._id);
+      if (product.likesCount > 1) {
+        product.likesCount = product.likesCount - 1;
+      } else {
+        product.likesCount = 0;
+      }
+      await product.save();
+      return res.status(200).json({
+        success: true,
+        message: "Product unliked",
+        data: { likesCount: product.likesCount },
+        error: null,
+      });
+    }
+
+    await Like.create({
+      user: userId,
+      product: productId,
+    });
+    product.likesCount += 1;
+    await product.save();
+    return res.status(200).json({
+      success: true,
+      message: "Product liked",
+      data: { likesCount: product.likesCount },
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to like product",
+      data: null,
+      error: err.message,
+    });
+  }
+};
+
+//Unlike_product
+exports.unlikeProduct = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+        error: null,
+      });
+    }
+
+    const like = await Like.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (!like) {
+      return res.status(400).json({
+        success: false,
+        message: "Product is not liked yet",
+        data: null,
+        error: null,
+      });
+    }
+    await Like.findByIdAndDelete(like._id);
+    if (product.likesCount >= 1) product.likesCount = product.likesCount - 1;
+
+    await product.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product unliked",
+      data: { likesCount: product.likesCount },
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to unlike product",
+      data: null,
+      error: err.message,
+    });
+  }
+};
+
+//get_like_count_id
+exports.likesCount = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+        error: null,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Likes fetched successfully",
+      data: {
+        totalLikes: product.likesCount,
+      },
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch likes",
       data: null,
       error: err.message,
     });
