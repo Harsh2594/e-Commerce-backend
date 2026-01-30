@@ -29,6 +29,8 @@ app.use("/api/admin", require("./routes/adminOrder.routes"));
 
 app.use("/api/payment", require("./routes/payment.routes"));
 
+app.use("/api/review", require("./routes/review.routes"));
+
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
