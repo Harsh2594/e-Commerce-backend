@@ -15,4 +15,4 @@ const likeSchema = new mongoose.Schema({
 
 likeSchema.index({ user: 1, product: 1 }, { unique: true });
 
-module.exports = mongoose.Schema("Like", likeSchema);
+module.exports = mongoose.model("Like", likeSchema);
