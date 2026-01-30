@@ -55,7 +55,62 @@ router.post(
   categoryController.createCategory,
 );
 
-//Get Category
+//Get_Categories
+/**
+ * @swagger
+ * /api/category/getCategories:
+ *   get:
+ *     summary: Get all categories
+ *     description: Fetch all active categories. Requires JWT authentication.
+ *     tags:
+ *       - Categories
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Categories fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Categories fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64cat123456
+ *                       name:
+ *                         type: string
+ *                         example: Electronics
+ *                       slug:
+ *                         type: string
+ *                         example: electronics
+ *                       isActive:
+ *                         type: boolean
+ *                         example: true
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No categories found
+ *       500:
+ *         description: Server error
+ */
+
+router.get("/getCategories", verifyToken, categoryController.getCategories);
+
+//Get Category_By_slug
 /**
  * @swagger
  * /api/category/getCategory/{slug}:
