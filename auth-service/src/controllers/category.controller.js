@@ -49,6 +49,36 @@ exports.createCategory = async (req, res) => {
 };
 
 //get all category
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find({
+      isActive: true,
+    });
+    if (!categories) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+        data: null,
+        error: null,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "category found",
+      data: categories,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Not able to fetch products",
+      data: null,
+      error: err.message,
+    });
+  }
+};
+
+//get all category by slug
 exports.getCategoryBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
