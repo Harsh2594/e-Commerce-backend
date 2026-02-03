@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: {
     type: Date,
   },
+  followerCount: {
+    type: Number,
+    default: 0,
+  },
+  followingCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);
