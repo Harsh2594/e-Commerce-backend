@@ -16,6 +16,11 @@ const cartItem = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  sourcePost: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+    default: null,
+  },
 });
 
 //Cart_Schema
@@ -37,5 +42,7 @@ const cartSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// cartSchema.index({ user: 1 });
 
 module.exports = mongoose.model("Cart", cartSchema);
