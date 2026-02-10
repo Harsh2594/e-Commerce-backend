@@ -31,6 +31,7 @@ exports.createOrder = async (req, res) => {
         product: item.product._id,
         price: item.product.price,
         quantity: item.quantity,
+        sourcePost: item.sourcePost || null,
       };
     });
 
