@@ -1,6 +1,6 @@
 const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
-const User = require("../models/user.model");
+const Post = require("../models/post.model");
 //Cart_API
 
 //Add_to_cart
@@ -10,7 +10,7 @@ exports.addToCart = async (req, res) => {
     const { productId, quantity = 1 } = req.body;
     //check product
     const product = await Product.findById(productId);
-    if (!product || !product.status) {
+    if (!product || !product.status !== "active") {
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -189,4 +189,90 @@ exports.removeProduct = async (req, res) => {
     data: cart,
     error: null,
   });
+};
+
+//Add_to_cart_from post
+exports.addToCartFromPost = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { postId, quantity = 1 } = req.body;
+
+    const post = await Post.findById(postId);
+    //find_post
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "post not found",
+        data: null,
+        error: null,
+      });
+    }
+    //find_product
+    const product = await Product.findById(post.taggedProduct);
+    if (!product || product.status !== "active") {
+      return res.status(404).json({
+        success: false,
+        message: "Product not available",
+        data: null,
+        error: null,
+      });
+    }
+    //find_user's cart
+    let cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+      cart = new Cart({
+        user: userId,
+        items: [
+          {
+            product: product._id,
+            quantity: quantity,
+            price: product.price,
+            sourcePost: postId,
+          },
+        ],
+        orderTotal: product.price * quantity,
+      });
+      await cart.save();
+      return res.status(201).json({
+        success: true,
+        message: "Product added to cart",
+        data: cart,
+        error: null,
+      });
+    }
+
+    //if cart exists
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product.toString() === product._id.toString(),
+    );
+    if (itemIndex > -1) {
+      cart.items[itemIndex].quantity += quantity;
+    } else {
+      cart.items.push({
+        product: product._id,
+        quantity: quantity,
+        price: product.price,
+        sourcePost: postId,
+      });
+    }
+    //recalculate total order
+    cart.orderTotal = cart.items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0,
+    );
+    await cart.save();
+    return res.status(200).json({
+      success: true,
+      message: "Cart updated successfully",
+      data: cart,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      error: err.message,
+    });
+  }
 };
