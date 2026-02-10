@@ -152,4 +152,92 @@ router.delete(
   cartController.removeProduct,
 );
 
+//add_to_cart_from_post
+/**
+ * @swagger
+ * /api/cart/addPost:
+ *   post:
+ *     summary: Add product to cart from post
+ *     description: Add a product to cart using the tagged product from a post. Requires JWT authentication.
+ *     tags:
+ *       - Cart
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - postId
+ *             properties:
+ *               postId:
+ *                 type: string
+ *                 example: 64post123456
+ *               quantity:
+ *                 type: integer
+ *                 example: 2
+ *                 default: 1
+ *     responses:
+ *       201:
+ *         description: Product added to cart successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product added to cart
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64cart123456
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           product:
+ *                             type: string
+ *                             example: 64prod123456
+ *                           quantity:
+ *                             type: integer
+ *                             example: 2
+ *                           price:
+ *                             type: number
+ *                             example: 79999
+ *                           sourcePost:
+ *                             type: string
+ *                             example: 64post123456
+ *                     orderTotal:
+ *                       type: number
+ *                       example: 159998
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       200:
+ *         description: Cart updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin not allowed
+ *       404:
+ *         description: Post or product not found
+ *       500:
+ *         description: Server error
+ */
+
+router.post(
+  "/addPost",
+  verifyToken,
+  notAnAdmin,
+  cartController.addToCartFromPost,
+);
 module.exports = router;
