@@ -2,6 +2,8 @@ const Product = require("../models/product.model");
 const User = require("../models/user.model");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
+const rewardService = require("../services/reward.service");
+const PointsTransaction = require("../models/pointTransaction.model");
 
 //getAllorders
 exports.getAllOrders = async (req, res) => {
@@ -44,6 +46,10 @@ exports.changeOrderStatus = async (req, res) => {
       });
     }
     order.orderStatus = orderStatus;
+    if (order.orderStatus === "delivered") {
+      await rewardService.creditRewardPoints(order);
+      order.rewardProcessed = true;
+    }
     await order.save();
 
     return res.status(200).json({
@@ -55,7 +61,7 @@ exports.changeOrderStatus = async (req, res) => {
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "signup failed",
+      message: "failed to update order status",
       data: null,
       error: err.message,
     });
