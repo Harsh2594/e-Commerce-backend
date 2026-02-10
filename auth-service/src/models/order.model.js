@@ -15,6 +15,10 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
+  sourcePost: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -42,6 +46,10 @@ const orderSchema = new mongoose.Schema(
     shippingAddress: {
       type: Object,
       required: true,
+    },
+    rewardProcessed: {
+      type: Boolean,
+      default: false,
     },
   },
   {
