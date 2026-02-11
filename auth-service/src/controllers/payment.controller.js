@@ -1,6 +1,7 @@
 const Payment = require("../models/payment.model");
 const User = require("../models/user.model");
 const Order = require("../models/order.model");
+const pointTransactionModel = require("../models/pointTransaction.model");
 
 //mock_Payemnt_System
 
@@ -29,13 +30,38 @@ exports.mockPayment = async (req, res) => {
   const payment = await Payment.create({
     user: userId,
     order: orderId,
-    amount: order.totalAmount,
+    amount: order.finalAmount,
     paymentStatus: paymentStatus,
     transactionId: `SBI-${Date.now()}`,
   });
 
   if (paymentStatus === "success") {
     order.orderStatus = "confirmed";
+    //redeem points
+    if (order.redeemedPoints > 0 && !order.rewardDeducted) {
+      const updatedUser = await User.findByIdAndUpdate(
+        {
+          _id: order.user,
+          rewardPoints: { $gte: order.redeemedPoints },
+        },
+        {
+          $inc: { rewardPoints: -order.redeemedPoints },
+        },
+        { new: true },
+      );
+      if (!updatedUser) {
+        throw new Error("reward deduction failed");
+      }
+
+      await pointTransactionModel.create({
+        user: order.user,
+        points: order.redeemedPoints,
+        type: "REDEEM",
+        source: "ORDER_REDEEM",
+        referenceId: order._id,
+      });
+      order.rewardDeducted = true;
+    }
     await order.save();
   }
   return res.status(200).json({
