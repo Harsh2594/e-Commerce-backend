@@ -8,6 +8,7 @@ exports.createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { paymentMethod, shippingAddress } = req.body;
+    const user = await User.findById(userId);
     //find user's cart
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     //if cart empty
@@ -35,11 +36,25 @@ exports.createOrder = async (req, res) => {
       };
     });
 
+    //calculate redeem point accoding to order
+    redeemPoints = totalAmount * 0.1; //10 points for 100rs.
+    if (redeemPoints > user.rewardPoints) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient reward points",
+        data: null,
+        error: null,
+      });
+    }
+
+    const finalAmount = totalAmount - redeemPoints;
     //create order
     const order = await Order.create({
       user: userId,
       items: orderItems,
       totalAmount,
+      redeemedPoints: redeemPoints,
+      finalAmount: finalAmount,
       paymentMethod,
       paymentStatus: "pending",
       shippingAddress,
