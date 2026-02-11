@@ -51,6 +51,17 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    redeemedPoints: {
+      type: Number,
+      default: 0,
+    },
+    finalAmount: {
+      type: Number,
+    },
+    rewardDeducted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
