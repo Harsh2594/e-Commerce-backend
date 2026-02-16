@@ -319,4 +319,90 @@ router.get("/my-orders", verifyToken, notAnAdmin, orderController.getOrders);
 
 router.get("/:orderId", verifyToken, notAnAdmin, orderController.getOrdersById);
 
+//Cancel_order_by_id
+/**
+ * @swagger
+ * /api/order/{orderId}:
+ *   patch:
+ *     summary: Cancel order
+ *     description: Cancel an order placed by the logged-in user. Cannot cancel shipped or delivered orders. Rewards will be refunded if applicable.
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID to cancel
+ *     responses:
+ *       200:
+ *         description: Order cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Order cancelled successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64order123456
+ *                     orderStatus:
+ *                       type: string
+ *                       example: cancelled
+ *                     paymentStatus:
+ *                       type: string
+ *                       example: refunded
+ *                     redeemedPoints:
+ *                       type: number
+ *                       example: 100
+ *                     rewardDeducted:
+ *                       type: boolean
+ *                       example: false
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       400:
+ *         description: Order cannot be cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Order can not be canceled
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Cancel failed
+ */
+
+router.patch(
+  "/:orderId",
+  verifyToken,
+  notAnAdmin,
+  orderController.cancelOrderById,
+);
+
 module.exports = router;
