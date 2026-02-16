@@ -37,6 +37,8 @@ app.use("/api/follow", require("./routes/follow.routes"));
 
 app.use("/api/posts", require("./routes/post.routes"));
 
+app.use("/api/wallet", require("./routes/wallet.routes"));
+
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
