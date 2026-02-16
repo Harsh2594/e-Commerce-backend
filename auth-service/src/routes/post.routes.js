@@ -105,6 +105,82 @@ router.post(
 );
 
 //get_posts
-router.get("/", verifyToken, PostController.getAllPosts);
+/**
+ * @swagger
+ * /api/posts:
+ *   get:
+ *     summary: Get all posts (feed)
+ *     description: Fetch all active posts excluding the logged-in user's posts. Requires JWT authentication.
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Posts fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Posts fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 64post123456
+ *                       caption:
+ *                         type: string
+ *                         example: Check out this amazing product!
+ *                       imageUrl:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           example: /uploads/post1.jpg
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 64user123456
+ *                           name:
+ *                             type: string
+ *                             example: John Doe
+ *                       taggedProduct:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 64prod123456
+ *                           productName:
+ *                             type: string
+ *                             example: iPhone 14
+ *                           price:
+ *                             type: number
+ *                             example: 79999
+ *                           productImage:
+ *                             type: string
+ *                             example: iphone.jpg
+ *                       createdAt:
+ *                         type: string
+ *                         example: 2025-01-24T10:30:00Z
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to fetch posts
+ */
+
+router.get("/", verifyToken, PostController.getPosts);
 
 module.exports = router;
