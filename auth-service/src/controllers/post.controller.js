@@ -83,12 +83,10 @@ exports.getPosts = async (req, res) => {
     const userId = req.user.id;
 
     const posts = await Post.find({
-      user: { $ne: userId },
-      isActive: true,
+      user: { $ne: new mongoose.Types.ObjectId(userId) },
     })
       .populate("user", "name")
-      .populate("taggedProduct", "productName", "price", "productImage");
-
+      .populate("taggedProduct", "productName price productImage");
     return res.status(200).json({
       success: true,
       message: "Posts fetched successfully",
