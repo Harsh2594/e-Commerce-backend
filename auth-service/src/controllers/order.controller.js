@@ -2,6 +2,7 @@ const Product = require("../models/product.model");
 const User = require("../models/user.model");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
+const pointTransactionModel = require("../models/pointTransaction.model");
 
 // POST /api/orders/create
 exports.createOrder = async (req, res) => {
@@ -37,17 +38,22 @@ exports.createOrder = async (req, res) => {
     });
 
     //calculate redeem point accoding to order
-    redeemPoints = totalAmount * 0.1; //10 points for 100rs.
-    if (redeemPoints > user.rewardPoints) {
-      return res.status(400).json({
-        success: false,
-        message: "Insufficient reward points",
-        data: null,
-        error: null,
-      });
+    let redeemPoints = 0;
+    let finalAmount = totalAmount;
+    if (user.rewardPoints > 0) {
+      const maxAllowedRedeem = totalAmount * 0.1;
+      redeemPoints = Math.min(user.rewardPoints, maxAllowedRedeem);
+      redeemPoints = Math.floor(redeemPoints);
+      if (redeemPoints > user.rewardPoints) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient reward points",
+          data: null,
+          error: null,
+        });
+      }
+      finalAmount = totalAmount - redeemPoints;
     }
-
-    const finalAmount = totalAmount - redeemPoints;
     //create order
     const order = await Order.create({
       user: userId,
@@ -137,6 +143,62 @@ exports.getOrdersById = async (req, res) => {
       success: false,
       message: "Failed to fetch orders",
       data: null,
+      error: err.message,
+    });
+  }
+};
+
+//cancel_order
+exports.cancelOrderById = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+    const order = await Order.findOne({ _id: orderId, user: userId });
+    //find order
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+        data: null,
+        error: null,
+      });
+    }
+    if (order.orderStatus === "shipped" || order.orderStatus === "delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "Order can not be canceled",
+        data: null,
+        error: null,
+      });
+    }
+    if (order.redeemedPoints > 0 && order.rewardDeducted) {
+      await User.findByIdAndUpdate(order.user, {
+        $inc: { rewardPoints: order.redeemedPoints },
+      });
+
+      await pointTransactionModel.create({
+        user: order.user,
+        points: order.redeemedPoints,
+        type: "REDEEM_REFUND",
+        source: "ORDER_CANCEL",
+        referenceId: order._id,
+      });
+
+      order.rewardDeducted = false;
+    }
+    order.orderStatus = "cancelled";
+    order.paymentStatus = "refunded";
+
+    await order.save();
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      data: order,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Cancel failed",
       error: err.message,
     });
   }
