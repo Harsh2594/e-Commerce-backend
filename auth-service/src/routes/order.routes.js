@@ -219,7 +219,7 @@ router.post("/create", verifyToken, notAnAdmin, orderController.createOrder);
 
 router.get("/my-orders", verifyToken, notAnAdmin, orderController.getOrders);
 
-//get_orders_by_id
+//get_order_by_id
 /**
  * @swagger
  * /api/orders/{orderId}:
@@ -322,7 +322,7 @@ router.get("/:orderId", verifyToken, notAnAdmin, orderController.getOrdersById);
 //Cancel_order_by_id
 /**
  * @swagger
- * /api/order/{orderId}:
+ * /api/orders/{orderId}/cancel:
  *   patch:
  *     summary: Cancel order
  *     description: Cancel an order placed by the logged-in user. Cannot cancel shipped or delivered orders. Rewards will be refunded if applicable.
@@ -399,10 +399,80 @@ router.get("/:orderId", verifyToken, notAnAdmin, orderController.getOrdersById);
  */
 
 router.patch(
-  "/:orderId",
+  "/:orderId/cancel",
   verifyToken,
   notAnAdmin,
   orderController.cancelOrderById,
+);
+
+//Return_Order
+/**
+ * @swagger
+ * /api/orders/{orderId}/return:
+ *   patch:
+ *     summary: Return delivered order
+ *     description: Return a delivered order. Refunds payment and restores redeemed reward points. Also reverses influencer rewards if applicable.
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID to return
+ *     responses:
+ *       200:
+ *         description: Order returned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Order returned successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64order123456
+ *                     orderStatus:
+ *                       type: string
+ *                       example: returned
+ *                     paymentStatus:
+ *                       type: string
+ *                       example: refunded
+ *                     redeemedPoints:
+ *                       type: number
+ *                       example: 100
+ *                     rewardProcessed:
+ *                       type: boolean
+ *                       example: false
+ *                 error:
+ *                   type: string
+ *                   example: null
+ *       400:
+ *         description: Order cannot be returned before delivery
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Return failed
+ */
+
+router.patch(
+  "/:orderId/return",
+  verifyToken,
+  notAnAdmin,
+  orderController.returnOrder,
 );
 
 module.exports = router;
