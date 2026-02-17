@@ -13,11 +13,11 @@ const pointTransactionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["EARN", "REDEEM", "REDEEM_REFUND"],
+      enum: ["EARN", "REDEEM", "REDEEM_REFUND", "REWARD_REVERSEAL"],
     },
     source: {
       type: String,
-      enum: ["POST_SALE", "ORDER_REDEEM", "ORDER_CANCEL"],
+      enum: ["POST_SALE", "ORDER_REDEEM", "ORDER_CANCEL", "ORDER_RETURN"],
     },
     referenceId: {
       type: mongoose.Schema.Types.ObjectId,
