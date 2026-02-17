@@ -3,6 +3,7 @@ const User = require("../models/user.model");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
 const pointTransactionModel = require("../models/pointTransaction.model");
+const REWARD = 0.01;
 
 // POST /api/orders/create
 exports.createOrder = async (req, res) => {
@@ -199,6 +200,91 @@ exports.cancelOrderById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Cancel failed",
+      error: err.message,
+    });
+  }
+};
+
+//Return_order
+exports.returnOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate({
+      path: "items.sourcePost",
+      populate: {
+        path: "user",
+        select: "_id name",
+      },
+    });
+
+    //find order
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+        data: null,
+        error: null,
+      });
+    }
+    if (order.orderStatus !== "delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "can not return product before delivery",
+        data: null,
+        error: null,
+      });
+    }
+    //Restore redeemed points (if deducted)
+    if (order.redeemedPoints > 0 && order.rewardDeducted) {
+      await User.findByIdAndUpdate(order.user, {
+        $inc: { rewardPoints: order.redeemedPoints },
+      });
+      await pointTransactionModel.create({
+        user: order.user,
+        points: order.redeemedPoints,
+        type: "REDEEM_REFUND",
+        source: "ORDER_RETURN",
+        referenceId: order._id,
+      });
+
+      order.rewardDeducted = false;
+    }
+    //change source-post reward(jisko es post ki sale se reward mila hai uske rewardpoints update krne hain)
+    if (order.rewardProcessed) {
+      for (const item of order.items) {
+        if (!item.sourcePost) {
+          continue;
+        }
+        const postUser = item.sourcePost.user._id;
+        const rewardPoints = Math.floor(item.price * item.quantity * REWARD);
+        await User.findByIdAndUpdate(postUser, {
+          $inc: { rewardPoints: -rewardPoints },
+        });
+        await pointTransactionModel.create({
+          user: postUser,
+          points: rewardPoints,
+          type: "REWARD_REVERSEAL",
+          source: "ORDER_RETURN",
+          referenceId: order._id,
+        });
+      }
+      order.rewardProcessed = false;
+    }
+    order.orderStatus = "returned";
+    order.paymentStatus = "refunded";
+    await order.save();
+    return res.status(200).json({
+      success: true,
+      message: "Order returned successfully",
+      data: order,
+      error: null,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Return failed",
+      data: null,
       error: err.message,
     });
   }
