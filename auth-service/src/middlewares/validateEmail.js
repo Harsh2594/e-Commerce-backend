@@ -16,6 +16,8 @@ module.exports = (req, res, next) => {
       error: null,
     });
   }
+  email = email.trim().toLowerCase();
+  req.body.email = email;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({
