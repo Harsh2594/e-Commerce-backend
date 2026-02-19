@@ -73,7 +73,7 @@ exports.getWalletSummary = async (req, res) => {
 
     const summary = await pointTransactionModel.aggregate([
       {
-        $match: { user: new mongoose.Types.ObjectId(req.user._id) },
+        $match: { user: new mongoose.Types.ObjectId(req.user.id) },
       },
       {
         $group: {
