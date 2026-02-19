@@ -1,5 +1,5 @@
 module.exports = (req, res, next) => {
-  const { email } = req.body;
+  let { email } = req.body;
   if (!email) {
     return res.status(400).json({
       success: false,
