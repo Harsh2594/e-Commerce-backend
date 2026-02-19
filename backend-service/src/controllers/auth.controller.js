@@ -27,6 +27,7 @@ exports.signup = async (req, res) => {
       message: "User ragistered successfully",
       data: {
         id: user._id,
+        publicId: user.publicId,
         email: user.email,
         role: user.role,
       },
@@ -75,7 +76,7 @@ exports.login = async (req, res) => {
         role: user.role,
       },
       env.jwtSecret,
-      { expiresIn: "2d" }
+      { expiresIn: "2d" },
     );
 
     res.status(200).json({
