@@ -3,6 +3,7 @@ const User = require("../models/user.model");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
 const pointTransactionModel = require("../models/pointTransaction.model");
+const generateCustomId = require("../utils/generateCustomId");
 const REWARD = 0.01;
 
 // POST /api/orders/create
@@ -56,7 +57,9 @@ exports.createOrder = async (req, res) => {
       finalAmount = totalAmount - redeemPoints;
     }
     //create order
+    const publicId = await generateCustomId("order", "ORD");
     const order = await Order.create({
+      publicId,
       user: userId,
       items: orderItems,
       totalAmount,
