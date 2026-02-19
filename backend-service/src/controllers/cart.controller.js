@@ -10,7 +10,7 @@ exports.addToCart = async (req, res) => {
     const { productId, quantity = 1 } = req.body;
     //check product
     const product = await Product.findById(productId);
-    if (!product || !product.status !== "active") {
+    if (!product || product.status !== "active") {
       return res.status(404).json({
         success: false,
         message: "Product not found",
