@@ -10,9 +10,17 @@ exports.createPost = async (req, res) => {
   try {
     const userId = req.user.id;
     const { caption, taggedProductId } = req.body;
-
-    //Validate image
+    //validate caption
+    if (!caption || caption.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide caption or less then 500 character",
+        data: null,
+        error: null,
+      });
+    }
     if (!req.files || req.files.length === 0) {
+      //Validate image
       return res.status(400).json({
         success: false,
         message: "Post images is required",
@@ -81,15 +89,24 @@ exports.createPost = async (req, res) => {
 exports.getPosts = async (req, res) => {
   try {
     const userId = req.user.id;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
 
+    const totalPosts = await Product.countDocuments();
     const posts = await Post.find({
       user: { $ne: new mongoose.Types.ObjectId(userId) },
     })
+      .skip(skip)
+      .limit(limit)
       .populate("user", "name")
       .populate("taggedProduct", "productName price productImage");
     return res.status(200).json({
       success: true,
       message: "Posts fetched successfully",
+      totalPosts,
+      currentPage: page,
+      totalPages: Math.ceil(totalPosts / limit),
       data: posts,
       error: null,
     });
