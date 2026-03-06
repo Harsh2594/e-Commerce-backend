@@ -6,7 +6,23 @@ exports.addReview = async (req, res) => {
   try {
     const userId = req.user.id;
     const { productId, rating, comment } = req.body;
-
+    //validate_rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "please provide validate rating",
+        data: null,
+        error: null,
+      });
+    }
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "productId is required",
+        data: null,
+        error: null,
+      });
+    }
     //find review
     const existingReview = await Review.findOne({
       user: userId,
@@ -100,10 +116,11 @@ exports.removeReview = async (req, res) => {
 
     //update ptoduct rating
     if (product.totalReview > 1) {
-      const newtotalReview = product.totalReview - 1;
+      const newTotalReview = product.totalReview - 1;
       product.averageRating =
         (product.averageRating * product.totalReview - review.rating) /
-        newtotalReview;
+        newTotalReview;
+      product.totalReview = newTotalReview;
     } else {
       product.totalReview = 0;
       product.averageRating = 0;
