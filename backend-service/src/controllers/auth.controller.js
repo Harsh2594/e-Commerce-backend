@@ -3,15 +3,23 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const crypto = require("crypto");
-const { error } = require("console");
+const handleError = require("../utils/errorHandler");
 
 //signup
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name fields is required",
+        data: null,
+        error: null,
+      });
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Ragistered User" });
+      return res.status(400).json({ message: "Registered User" });
     }
     //hashed password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,22 +32,16 @@ exports.signup = async (req, res) => {
     });
     res.status(201).json({
       success: true,
-      message: "User ragistered successfully",
+      message: "User Register successfully",
       data: {
         id: user._id,
         publicId: user.publicId,
         email: user.email,
-        role: user.role,
       },
       error: null,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "signup failed",
-      data: null,
-      error: err.message,
-    });
+    return handleError(res, err, "signup");
   }
 };
 
@@ -91,23 +93,8 @@ exports.login = async (req, res) => {
       error: null,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Login Failed",
-      data: null,
-      err: err.message,
-    });
+    return handleError(res, err, "login");
   }
-};
-
-//logout
-exports.logout = async (req, res) => {
-  res.json({
-    success: true,
-    message: "Logout successfull.",
-    data: null,
-    error: null,
-  });
 };
 
 //Forgot_password
@@ -127,7 +114,6 @@ exports.forgotPassword = async (req, res) => {
     const resetToken = jwt.sign({ id: user._id }, env.jwtSecret, {
       expiresIn: "10m",
     });
-    console.log(resetToken);
     //hash token for saving in DB
     const hashedToken = crypto
       .createHash("sha256")
@@ -153,12 +139,7 @@ exports.forgotPassword = async (req, res) => {
       error: null,
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-      data: null,
-      error: err.message,
-    });
+    return handleError(res, err, "forgotPassword");
   }
 };
 
@@ -190,7 +171,7 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
-    user.save();
+    await user.save();
 
     return res.status(200).json({
       success: true,
@@ -199,11 +180,6 @@ exports.resetPassword = async (req, res) => {
       error: null,
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Server error!",
-      data: null,
-      error: null,
-    });
+    return handleError(res, err, "resetPassword");
   }
 };
