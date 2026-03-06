@@ -12,7 +12,9 @@ exports.createCategory = async (req, res) => {
         error: null,
       });
     }
-    const existingCategory = await Category.findOne({ name: name.trim() });
+    const existingCategory = await Category.findOne({
+      name: name.trim().toLowerCase(),
+    });
     if (existingCategory) {
       return res.status(409).json({
         success: false,
@@ -137,6 +139,16 @@ exports.updateCategory = async (req, res) => {
       .trim()
       .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-");
+    const slugExists = await Category.findOne({ slug, _id: { $ne: id } });
+    if (slugExists) {
+      return res.status(409).json({
+        // 409 = conflict
+        success: false,
+        message: `Category "${slugExists.name}" already exists with this name`,
+        data: null,
+        error: null,
+      });
+    }
     category.name = name.trim();
     category.slug = slug;
     await category.save();
