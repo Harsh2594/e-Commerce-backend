@@ -1,9 +1,5 @@
-const Product = require("../models/product.model");
-const User = require("../models/user.model");
 const Order = require("../models/order.model");
-const Cart = require("../models/cart.model");
 const rewardService = require("../services/reward.service");
-const PointsTransaction = require("../models/pointTransaction.model");
 
 //getAllorders
 exports.getAllOrders = async (req, res) => {
@@ -32,7 +28,24 @@ exports.changeOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { orderStatus } = req.body;
-
+    //validate orderId
+    if (!orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID format",
+        data: null,
+        error: null,
+      });
+    }
+    //Validate orderStatus is provided
+    if (!orderStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "orderStatus is required",
+        data: null,
+        error: null,
+      });
+    }
     //find order
     const order = await Order.findById(orderId)
       .populate("user", "name email")
@@ -45,11 +58,32 @@ exports.changeOrderStatus = async (req, res) => {
         error: null,
       });
     }
-    order.orderStatus = orderStatus;
-    if (order.orderStatus === "delivered") {
+    //prevent backward status transitions
+    const STATUS_FLOW = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+      "cancelled",
+      "returned",
+    ];
+    const currentIndex = STATUS_FLOW.indexOf(order.orderStatus);
+    const newIndex = STATUS_FLOW.indexOf(orderStatus);
+    const allowedBackward = ["cancelled", "returned"];
+    if (newIndex < currentIndex && !allowedBackward.includes(orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: `can not change status from ${order.orderStatus} to ${orderStatus}`,
+        data: null,
+        error: null,
+      });
+    }
+
+    if (orderStatus === "delivered" && !order.rewardProcessed) {
       await rewardService.creditRewardPoints(order);
       order.rewardProcessed = true;
     }
+    order.orderStatus = orderStatus;
     await order.save();
 
     return res.status(200).json({
@@ -59,9 +93,12 @@ exports.changeOrderStatus = async (req, res) => {
       error: null,
     });
   } catch (err) {
-    return res.status(500).json({
+    const isValidationError = err.name === "ValidationError";
+    return res.status(isValidationError ? 400 : 500).json({
       success: false,
-      message: "failed to update order status",
+      message: isValidationError
+        ? err.message
+        : "failed to update order status",
       data: null,
       error: err.message,
     });
