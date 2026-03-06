@@ -26,7 +26,7 @@ exports.changePassword = async (req, res) => {
     }
     const user = await User.findById(req.user.id);
     if (!user) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: "User Not found",
         data: null,
@@ -34,9 +34,9 @@ exports.changePassword = async (req, res) => {
       });
     }
     //verfify old passwrod
-    const isMatch = await bcrypt.compare(oldPassword, newPassword);
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: "old password is incorrect",
         data: null,
@@ -78,7 +78,16 @@ exports.getProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User found",
-      data: { user },
+      data: {
+        publicId: user.publicId,
+        name: user.name,
+        phoneNo: user.phoneNumber,
+        address: user.address,
+        email: user.email,
+        followers: user.followerCount,
+        following: user.followingCount,
+        rewardPoints: user.rewardPoints,
+      },
       error: null,
     });
   } catch (err) {
@@ -106,7 +115,7 @@ exports.updateProfile = async (req, res) => {
         success: false,
         message: "No valid fields to update",
         data: null,
-        error: err.message,
+        error: null,
       });
     }
     const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, {
