@@ -83,7 +83,11 @@ router.get("/", verifyToken, notAnAdmin, cartController.getCart);
  * /api/cart/update:
  *   put:
  *     summary: Update cart item quantity
- *     description: Update the quantity of a product in the user's cart. Requires JWT authentication.
+ *     description: >
+ *       Update the quantity of a product in the user's cart.
+ *       Pass a positive integer to increase quantity, negative to decrease.
+ *       If the product is not in the cart, it will be added.
+ *       Requires JWT authentication. Admin access not allowed.
  *     tags:
  *       - Cart
  *     security:
@@ -100,21 +104,91 @@ router.get("/", verifyToken, notAnAdmin, cartController.getCart);
  *             properties:
  *               productId:
  *                 type: string
- *                 example: 64prod123456
+ *                 example: "664abc123def456789012345"
  *               quantity:
  *                 type: integer
- *                 example: 1
- *                 description: Quantity to increase or decrease
+ *                 example: 3
+ *                 description: >
+ *                   New quantity for the cart item.
+ *                   Use a positive value to set/increase quantity,
+ *                   negative value to decrease.
+ *                   Note: quantity is set directly, not incremented.
+ *           examples:
+ *             increase_quantity:
+ *               summary: Set quantity to 3
+ *               value:
+ *                 productId: "664abc123def456789012345"
+ *                 quantity: 3
+ *             decrease_quantity:
+ *               summary: Decrease quantity to 1
+ *               value:
+ *                 productId: "664abc123def456789012345"
+ *                 quantity: 1
  *     responses:
  *       200:
- *         description: Cart updated successfully
+ *         description: Cart updated successfully or nothing to update
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   nullable: true
+ *                 error:
+ *                   nullable: true
+ *                   example: null
+ *             examples:
+ *               cart_updated:
+ *                 summary: Cart updated successfully
+ *                 value:
+ *                   success: true
+ *                   message: Cart updated successfully
+ *                   data:
+ *                     _id: "663cart000aaa111222333444"
+ *                     user: "663fff000aaa111222333444"
+ *                     items:
+ *                       - product: "664abc123def456789012345"
+ *                         quantity: 3
+ *                         price: 499.99
+ *                     orderTotal: 1499.97
+ *                   error: null
+ *               nothing_to_update:
+ *                 summary: Cart is empty or does not exist
+ *                 value:
+ *                   success: true
+ *                   message: Nothing to update
+ *                   items: null
+ *                   error: null
  *       404:
- *         description: Product not found
+ *         description: Product not found or inactive
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Product not found
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   nullable: true
+ *                   example: null
  *       401:
  *         description: Unauthorized
  *       500:
  *         description: Server error
  */
+
 router.put("/update", verifyToken, notAnAdmin, cartController.updateCart);
 
 //Delete_cart_item
