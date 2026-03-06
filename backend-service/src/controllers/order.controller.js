@@ -6,38 +6,106 @@ const pointTransactionModel = require("../models/pointTransaction.model");
 const generateCustomId = require("../utils/generateCustomId");
 const REWARD = 0.01;
 
+//restoreStock_helper
+const restoreStock = async (decrementedProducts) => {
+  for (const { productId, quantity } of decrementedProducts) {
+    await Product.findByIdAndUpdate(productId, {
+      $inc: { stock: quantity },
+    });
+  }
+};
+
 // POST /api/orders/create
 exports.createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { paymentMethod, shippingAddress } = req.body;
+    //validate payment method
+    const allowedPaymentMethods = ["COD", "CARD", "UPI"];
+    if (!paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment method is required",
+        data: null,
+        error: null,
+      });
+    }
+    if (!allowedPaymentMethods.includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid payment method. Allowed values: ${allowedPaymentMethods.join(", ")}`,
+        data: null,
+        error: null,
+      });
+    }
+    //validate address
+    if (!shippingAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "Shipping address is required",
+        data: null,
+        error: null,
+      });
+    }
     const user = await User.findById(userId);
     //find user's cart
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     //if cart empty
     if (!cart || cart.items.length == 0) {
-      return res.status(200).json({
-        success: true,
+      return res.status(400).json({
+        success: false,
         message: "Cart is Empty",
         data: [],
         error: null,
       });
     }
-    //build order items
+    //stock_check+decrement stcok before order creation
+    const decrementedProducts = [];
+    const orderItems = [];
     let totalAmount = 0;
-    const orderItems = cart.items.map((item) => {
+    for (const item of cart.items) {
       if (!item.product || item.product.status !== "active") {
-        throw new Error("Product unavailable");
+        await restoreStock(decrementedProducts);
+        return res.status(400).json({
+          success: false,
+          message: `Product "${item.product.productName || "unknown"}" is unavailable`,
+          data: null,
+          error: null,
+        });
       }
-      const itemTotal = item.product.price * item.quantity;
-      totalAmount += itemTotal;
-      return {
+      const updatedProduct = await Product.findByIdAndUpdate(
+        {
+          _id: item.product._id,
+          stock: { $gte: item.quantity },
+        },
+        {
+          $inc: { stock: -item.quantity },
+        },
+        { new: true },
+      );
+      //null means stock was insufficient
+      if (!updatedProduct) {
+        await restoreStock(decrementedProducts);
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for "${item.product.productName}"`,
+          data: null,
+          error: null,
+        });
+      }
+      decrementedProducts.push({
+        productId: item.product._id,
+        quantity: item.quantity,
+      });
+      //build order
+      totalAmount += item.product.price * item.quantity;
+      orderItems.push({
         product: item.product._id,
         price: item.product.price,
         quantity: item.quantity,
         sourcePost: item.sourcePost || null,
-      };
-    });
+      });
+    }
 
     //calculate redeem point accoding to order
     let redeemPoints = 0;
@@ -46,14 +114,6 @@ exports.createOrder = async (req, res) => {
       const maxAllowedRedeem = totalAmount * 0.1;
       redeemPoints = Math.min(user.rewardPoints, maxAllowedRedeem);
       redeemPoints = Math.floor(redeemPoints);
-      if (redeemPoints > user.rewardPoints) {
-        return res.status(400).json({
-          success: false,
-          message: "Insufficient reward points",
-          data: null,
-          error: null,
-        });
-      }
       finalAmount = totalAmount - redeemPoints;
     }
     //create order
@@ -68,7 +128,7 @@ exports.createOrder = async (req, res) => {
       paymentMethod,
       paymentStatus: "pending",
       shippingAddress,
-      status: "pending",
+      orderStatus: "pending",
     });
 
     //clear cart
@@ -96,7 +156,7 @@ exports.getOrders = async (req, res) => {
     const userId = req.user.id;
     const orders = await Order.find({ user: userId }).populate(
       "items.product",
-      "name price images",
+      "productName price images",
     );
     if (!orders || orders.length == 0) {
       return res.status(200).json({
@@ -125,9 +185,9 @@ exports.getOrders = async (req, res) => {
 // GET /api/orders/{id}
 exports.getOrdersById = async (req, res) => {
   try {
-    // const userId = req.user.id;
+    const userId = req.user.id;
     const { orderId } = req.params;
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, user: userId });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -267,7 +327,7 @@ exports.returnOrder = async (req, res) => {
         await pointTransactionModel.create({
           user: postUser,
           points: rewardPoints,
-          type: "REWARD_REVERSEAL",
+          type: "REWARD_REVERSAL",
           source: "ORDER_RETURN",
           referenceId: order._id,
         });
