@@ -13,7 +13,7 @@ const pointTransactionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["EARN", "REDEEM", "REDEEM_REFUND", "REWARD_REVERSEAL"],
+      enum: ["EARN", "REDEEM", "REDEEM_REFUND", "REWARD_REVERSAL"],
     },
     source: {
       type: String,
