@@ -40,7 +40,7 @@ const validatePassword = require("../middlewares/validatePassword");
  *                 example: user1@test.com
  *               password:
  *                 type: string
- *                 example: user1t123
+ *                 example: User1@123
  *               role:
  *                 type: string
  *                 enum: [admin,user]
@@ -79,8 +79,6 @@ router.post("/signup", validateEmail, validatePassword, authController.signup);
  *         description: Invalid credentials
  */
 router.post("/login", loginValidation, authController.login);
-//logout
-router.post("/logout", authController.logout);
 //Forgot_Password
 /**
  * @swagger
@@ -110,6 +108,7 @@ router.post("/logout", authController.logout);
  *
  */
 router.post("/forgotPassword", validateEmail, authController.forgotPassword);
+
 //Reset_password
 /**
  * @swagger
@@ -129,16 +128,102 @@ router.post("/forgotPassword", validateEmail, authController.forgotPassword);
  *             properties:
  *               token:
  *                 type: string
- *                 example: reset_token_here
+ *                 description: Password reset token received via email
+ *                 example: "a3f5c2d1e4b6789012345678abcdef9012345678abcdef9012345678abcdef90"
  *               newPassword:
  *                 type: string
- *                 example: user1@123
+ *                 format: password
+ *                 description: New password for the account
+ *                 example: "NewPass@1234"
  *     responses:
  *       200:
  *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Password changed successfully
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   nullable: true
+ *                   example: null
  *       400:
- *         description: Invalid or expired token
+ *         description: Validation or token error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   nullable: true
+ *                   example: null
+ *             examples:
+ *               invalid_or_expired_token:
+ *                 summary: Token is invalid or expired
+ *                 value:
+ *                   success: false
+ *                   message: "Invalid or Expired token"
+ *                   data: null
+ *                   error: null
+ *               validation_error:
+ *                 summary: Mongoose validation failed (via handleError)
+ *                 value:
+ *                   success: false
+ *                   message: "Path `newPassword` is required"
+ *                   data: null
+ *                   error: null
+ *               invalid_id_format:
+ *                 summary: Invalid ID format (via handleError)
+ *                 value:
+ *                   success: false
+ *                   message: "Invalid ID format"
+ *                   data: null
+ *                   error: null
+ *               duplicate_entry:
+ *                 summary: Duplicate entry (via handleError)
+ *                 value:
+ *                   success: false
+ *                   message: "Duplicate entry"
+ *                   data: null
+ *                   error: null
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   nullable: true
+ *                   description: Error detail shown only in non-production environments
+ *                   example: null
  */
-router.post("/resetPassword", authController.resetPassword);
+router.post("/resetPassword", validatePassword, authController.resetPassword);
 
 module.exports = router;
