@@ -6,7 +6,14 @@ exports.clickFollow = async (req, res) => {
   try {
     const followerId = req.user.id;
     const { followingId } = req.params;
-
+    if (!mongoose.Types.ObjectId.isValid(followingId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid followingId format",
+        data: null,
+        error: null,
+      });
+    }
     //can not follow yourself
     if (followerId === followingId) {
       return res.status(400).json({
@@ -34,13 +41,15 @@ exports.clickFollow = async (req, res) => {
     });
     //Unfollow
     if (existingFollow) {
-      await Follow.findByIdAndDelete(existingFollow._id);
-      await User.findByIdAndUpdate(followerId, {
-        $inc: { followingCount: -1 },
-      });
-      await User.findByIdAndUpdate(followingId, {
-        $inc: { followerCount: -1 },
-      });
+      await Promise.all([
+        await Follow.findByIdAndDelete(existingFollow._id),
+        await User.findByIdAndUpdate(followerId, {
+          $inc: { followingCount: -1 },
+        }),
+        await User.findByIdAndUpdate(followingId, {
+          $inc: { followerCount: -1 },
+        }),
+      ]);
 
       return res.status(200).json({
         success: true,
@@ -50,13 +59,14 @@ exports.clickFollow = async (req, res) => {
       });
     }
     //follow
-    await Follow.create({
-      follower: followerId,
-      following: followingId,
-    });
-
-    await User.findByIdAndUpdate(followerId, { $inc: { followingCount: 1 } });
-    await User.findByIdAndUpdate(followingId, { $inc: { followerCount: 1 } });
+    await Promise.all([
+      Follow.create({
+        follower: followerId,
+        following: followingId,
+      }),
+      await User.findByIdAndUpdate(followerId, { $inc: { followingCount: 1 } }),
+      await User.findByIdAndUpdate(followingId, { $inc: { followerCount: 1 } }),
+    ]);
 
     return res.status(200).json({
       success: true,
