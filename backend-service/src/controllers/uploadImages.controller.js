@@ -1,6 +1,7 @@
 const Product = require("../models/product.model");
 const path = require("path");
 const fs = require("fs");
+const { promises } = require("dns");
 
 //upload_Images
 
@@ -8,7 +9,7 @@ exports.uploadImages = async (req, res) => {
   try {
     const { productId } = req.body;
     if (!productId) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "Product ID is required",
         data: null,
@@ -33,13 +34,13 @@ exports.uploadImages = async (req, res) => {
       {
         $push: { productImage: { $each: imagePaths } },
       },
-      { new: true }
+      { new: true },
     );
 
     return res.status(200).json({
       success: true,
       message: "Images uploaded successfully",
-      files: req.files,
+      files: imagePaths,
       error: null,
     });
   } catch (err) {
@@ -75,7 +76,6 @@ exports.updateImages = async (req, res) => {
       });
     }
     const product = await Product.findById(id);
-    console.log(product);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -87,13 +87,22 @@ exports.updateImages = async (req, res) => {
 
     //delete old product images
     if (product.productImage && product.productImage.length > 0) {
-      product.productImage.forEach((imgpath) => {
-        if (!imgpath) return;
-        const fullPath = path.join(__dirname, "..", "..", imgpath);
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-        }
-      });
+      await Promise.all(
+        product.productImage.map(async (imagePath) => {
+          if (!imagePath) {
+            return;
+          }
+          const fullPath = path.join(__dirname, "..", "..", imagePath);
+          try {
+            await fs.promises.unlink(fullPath);
+          } catch (unlikeErr) {
+            console.warn(
+              `could not delete image: ${fullPath}`,
+              unlikeErr.message,
+            );
+          }
+        }),
+      );
     }
     //save new images path
     const newImages = req.files
@@ -107,7 +116,7 @@ exports.updateImages = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Product images updated successfully",
-      data: product,
+      data: { productId: product._id, images: newImages },
       error: null,
     });
   } catch (err) {
