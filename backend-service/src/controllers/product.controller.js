@@ -5,18 +5,52 @@ const Like = require("../models/like.model");
 //Add_Product
 exports.addProduct = async (req, res) => {
   try {
+    const { productName, price, description, category, brand, stock } =
+      req.body;
+    if (!productName || !price || !description || !category || !brand) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "productName, price, description, category and brand are required",
+        data: null,
+        error: null,
+      });
+    }
+    //validate_price
+    if (isNaN(price) || Number(price) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be a positive number",
+        data: null,
+        error: null,
+      });
+    }
+    //validate_stock
+    if (stock !== undefined && (isNaN(stock) || Number(stock) < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock must be a non negative number",
+        data: null,
+        error: null,
+      });
+    }
     const product = await Product.create({
-      ...req.body,
+      productName,
+      price,
+      description,
+      category,
+      brand,
+      stock,
       createdBy: req.user.id,
     });
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Product created successfully",
       data: product,
       error: null,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to create product",
       data: null,
@@ -60,6 +94,28 @@ exports.delProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const { productName, price, description, category, brand, stock } =
+      req.body;
+
+    //build_update_object
+    const updateData = {};
+    if (productName !== undefined) updateData.productName = productName;
+    if (price !== undefined) updateData.price = Number(price);
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.category = category;
+    if (brand !== undefined) updateData.brand = brand;
+    if (stock !== undefined) updateData.stock = Number(stock);
+
+    //nothing to update check
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields to update",
+        data: null,
+        error: null,
+      });
+    }
+
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
@@ -69,7 +125,8 @@ exports.updateProduct = async (req, res) => {
         error: null,
       });
     }
-    const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
+
+    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -121,30 +178,39 @@ exports.getProducts = async (req, res) => {
 //view_product_by_id
 
 exports.getProductById = async (req, res) => {
-  const { id } = req.params;
-  if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
-    return res.status(404).json({
-      success: false,
-      message: "Invalid product ID",
-      data: null,
-      error: null,
-    });
-  }
-  const product = await Product.findById(id);
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      message: "Product not found",
+  try {
+    const { id } = req.params;
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid product ID",
+        data: null,
+        error: null,
+      });
+    }
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: product,
+        error: null,
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Product found successfully",
       data: product,
       error: null,
     });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "failed to fetch products",
+      data: null,
+      error: err.message,
+    });
   }
-  return res.status(200).json({
-    success: true,
-    message: "Product found successfully",
-    data: product,
-    error: null,
-  });
 };
 
 //Product_Reviews_by_product_Id
@@ -152,7 +218,7 @@ exports.reviews = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    const product = await Product.findOne(productId);
+    const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -190,16 +256,32 @@ exports.searchProduct = async (req, res) => {
         error: null,
       });
     }
+    //remove_whitespaces
+    const trimmedKeyword = keyword.trim();
+    //limit_keyword_length
+    if (trimmedKeyword.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Search keyword is too long",
+        data: null,
+        error: null,
+      });
+    }
+    //Escape special regex characters — PREVENTS ReDoS
+    const escapeRegex = (str) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+    const safeKeyword = escapeRegex(trimmedKeyword);
     const products = await Product.find({
       $or: [
         {
-          name: {
-            $regex: keyword,
+          productName: {
+            $regex: safeKeyword,
             $options: "i",
           },
         },
-        { description: { $regex: keyword, $options: "i" } },
-        { cetegory: { $regex: keyword, $options: "i" } },
+        { description: { $regex: safeKeyword, $options: "i" } },
+        { category: { $regex: safeKeyword, $options: "i" } },
       ],
     });
     return res.status(200).json({
@@ -247,7 +329,7 @@ exports.filterProducts = async (req, res) => {
       success: false,
       message: "Server error",
       data: null,
-      error: null,
+      error: err.message,
     });
   }
 };
@@ -321,16 +403,18 @@ exports.likeProduct = async (req, res) => {
     });
     if (alreadyLikes) {
       await Like.findByIdAndDelete(alreadyLikes._id);
-      if (product.likesCount > 1) {
-        product.likesCount = product.likesCount - 1;
-      } else {
-        product.likesCount = 0;
-      }
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        {
+          $inc: { likesCount: -1 },
+        },
+        { new: true },
+      );
       await product.save();
       return res.status(200).json({
         success: true,
         message: "Product unliked",
-        data: { likesCount: product.likesCount },
+        data: { likesCount: updatedProduct.likesCount },
         error: null,
       });
     }
@@ -339,12 +423,16 @@ exports.likeProduct = async (req, res) => {
       user: userId,
       product: productId,
     });
-    product.likesCount += 1;
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { $inc: { likesCount: 1 } },
+      { new: true },
+    );
     await product.save();
     return res.status(200).json({
       success: true,
       message: "Product liked",
-      data: { likesCount: product.likesCount },
+      data: { likesCount: updatedProduct.likesCount },
       error: null,
     });
   } catch (err) {
