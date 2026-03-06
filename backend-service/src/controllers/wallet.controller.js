@@ -10,16 +10,16 @@ exports.getWalletHistory = async (req, res) => {
 
     const pointTransaction = await pointTransactionModel.find({ user: userId });
     if (pointTransaction.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No wellet history found",
+      return res.status(200).json({
+        success: true,
+        message: "No wallet history found",
         data: null,
         error: null,
       });
     }
     return res.status(200).json({
       success: true,
-      message: "Wellet history found successfully",
+      message: "Wallet history found successfully",
       data: pointTransaction,
       error: null,
     });
@@ -70,7 +70,6 @@ exports.getWalletbalance = async (req, res) => {
 exports.getWalletSummary = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const summary = await pointTransactionModel.aggregate([
       {
         $match: { user: new mongoose.Types.ObjectId(req.user.id) },
@@ -85,6 +84,7 @@ exports.getWalletSummary = async (req, res) => {
     let totalEarned = 0;
     let totalRedeemed = 0;
     let totalRefunded = 0;
+    let totalReversed = 0;
 
     summary.forEach((item) => {
       if (item._id === "EARN") {
@@ -96,6 +96,9 @@ exports.getWalletSummary = async (req, res) => {
       if (item._id === "REDEEM_REFUND") {
         totalRefunded = item.total;
       }
+      if (item._id === "REWARD_REVERSAL") {
+        totalReversed = item.total;
+      }
     });
     const user = await User.findById(userId).select("rewardPoints");
     return res.status(200).json({
@@ -105,6 +108,7 @@ exports.getWalletSummary = async (req, res) => {
         totalEarned,
         totalRedeemed,
         totalRefunded,
+        totalReversed,
         currentBalance: user.rewardPoints || 0,
       },
       error: null,
