@@ -7,7 +7,7 @@
 
 const express = require("express");
 const router = express.Router();
-
+const notAnAdmin = require("../middlewares/notAnAdmin");
 const verifyToken = require("../middlewares/verifyToken");
 const commentController = require("../controllers/comment.controller");
 
@@ -98,7 +98,7 @@ const commentController = require("../controllers/comment.controller");
  *       500:
  *         description: Failed to add comment
  */
-router.post("/add", verifyToken, commentController.addComment);
+router.post("/add", verifyToken, notAnAdmin, commentController.addComment);
 
 // Get comments by product
 /**
@@ -218,6 +218,11 @@ router.get(
  *         description: Failed to delete comment
  */
 
-router.delete("/:commentId", verifyToken, commentController.deleteComment);
+router.delete(
+  "/:commentId",
+  verifyToken,
+  notAnAdmin,
+  commentController.deleteComment,
+);
 
 module.exports = router;
