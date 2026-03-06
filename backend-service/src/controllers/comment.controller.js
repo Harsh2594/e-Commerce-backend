@@ -7,7 +7,7 @@ exports.addComment = async (req, res) => {
   try {
     const userId = req.user.id;
     const { productId, text } = req.body;
-    if (!text) {
+    if (!text || !text.length > 1000) {
       return res.status(400).json({
         success: false,
         message: "Comment text is required",
@@ -93,7 +93,7 @@ exports.deleteComment = async (req, res) => {
         error: null,
       });
     }
-    if (comment.user.toString !== userId.toString()) {
+    if (comment.user.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to delete this comment",
