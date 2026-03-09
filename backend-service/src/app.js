@@ -31,7 +31,7 @@ app.use("/api/payment", require("./routes/payment.routes"));
 
 app.use("/api/review", require("./routes/review.routes"));
 
-app.use("/api/comment", require("./routes/review.routes"));
+app.use("/api/comment", require("./routes/comment.routes"));
 
 app.use("/api/follow", require("./routes/follow.routes"));
 
