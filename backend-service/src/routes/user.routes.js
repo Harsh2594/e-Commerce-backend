@@ -50,24 +50,44 @@ router.put("/changePassword", verifyToken, userController.changePassword);
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User profile fetched successfully changed
+ *         description: User profile fetched successfully
  *         content:
  *           application/json:
  *             schema:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               phoneNumber:
- *                 type: string
- *               address:
- *                 type: string
- *               role:
- *                 type: string
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User profile fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "664abc123def456789012345"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     email:
+ *                       type: string
+ *                       example: "john@example.com"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "+91-9876543210"
+ *                     address:
+ *                       type: string
+ *                       example: "123 Main Street, Lucknow, UP"
+ *                     role:
+ *                       type: string
+ *                       enum: [user, admin]
+ *                       example: "user"
+ *                 error:
+ *                   type: string
+ *                   nullable: true
+ *                   example: null
  *       401:
  *         description: Unauthorized or invalid token
  *       404:
