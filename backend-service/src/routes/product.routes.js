@@ -32,29 +32,148 @@ const reviewController = require("../controllers/review.controller");
  *               - productName
  *               - price
  *               - description
+ *               - category
+ *               - brand
  *             properties:
  *               productName:
  *                 type: string
- *                 example: iPhone 15
+ *                 example: "iPhone 15"
  *               price:
  *                 type: number
+ *                 minimum: 1
  *                 example: 79999
+ *                 description: Must be a positive number
  *               description:
  *                 type: string
- *                 example: Latest Apple iPhone
+ *                 example: "Latest Apple iPhone with A16 Bionic chip"
  *               category:
  *                 type: string
- *                 example: Electronics
+ *                 description: MongoDB Category ID reference
+ *                 example: "664abc123def456789012345"
  *               brand:
  *                 type: string
- *                 example: Apple
+ *                 example: "Apple"
+ *               stock:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 100
+ *                 description: Must be a non-negative number. Defaults to 0 if not provided.
  *     responses:
  *       201:
  *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product created successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "664abc123def456789012345"
+ *                     productName:
+ *                       type: string
+ *                       example: "iPhone 15"
+ *                     price:
+ *                       type: number
+ *                       example: 79999
+ *                     description:
+ *                       type: string
+ *                       example: "Latest Apple iPhone with A16 Bionic chip"
+ *                     category:
+ *                       type: string
+ *                       example: "664abc123def456789012345"
+ *                     brand:
+ *                       type: string
+ *                       example: "Apple"
+ *                     stock:
+ *                       type: integer
+ *                       example: 100
+ *                     status:
+ *                       type: string
+ *                       enum:
+ *                         - active
+ *                         - inactive
+ *                         - out of stock
+ *                         - discontinued
+ *                       example: active
+ *                     createdBy:
+ *                       type: string
+ *                       description: MongoDB User ID reference
+ *                       example: "663fff000aaa111222333444"
+ *                 error:
+ *                   nullable: true
+ *                   example: null
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   nullable: true
+ *                   example: null
+ *             examples:
+ *               missing_required_fields:
+ *                 summary: Missing required fields
+ *                 value:
+ *                   success: false
+ *                   message: "productName, price, description, category and brand are required"
+ *                   data: null
+ *                   error: null
+ *               invalid_price:
+ *                 summary: Price is not a positive number
+ *                 value:
+ *                   success: false
+ *                   message: "Price must be a positive number"
+ *                   data: null
+ *                   error: null
+ *               invalid_stock:
+ *                 summary: Stock is negative
+ *                 value:
+ *                   success: false
+ *                   message: "Stock must be a non negative number"
+ *                   data: null
+ *                   error: null
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Admin access required
+ *       500:
+ *         description: Failed to create product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to create product"
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 router.post("/add", verifyToken, isAdmin, productController.addProduct);
 
@@ -111,7 +230,7 @@ router.put("/:id", verifyToken, isAdmin, productController.updateProduct);
 //Delete_Product
 /**
  * @swagger
- * /api/products/{id}:
+ * /api/products/delete/{id}:
  *   delete:
  *     summary: Delete product (Admin only)
  *     tags: [Products]
@@ -134,7 +253,12 @@ router.put("/:id", verifyToken, isAdmin, productController.updateProduct);
  *       404:
  *         description: Product not found
  */
-router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
+router.delete(
+  "/delete/:id",
+  verifyToken,
+  isAdmin,
+  productController.delProduct,
+);
 
 //View_Product
 /**
@@ -166,6 +290,98 @@ router.delete("/:id", verifyToken, isAdmin, productController.delProduct);
  *     responses:
  *       200:
  *         description: Products fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product fetched successfully
+ *                 totalProducts:
+ *                   type: integer
+ *                   example: 50
+ *                 currentPage:
+ *                   type: integer
+ *                   example: 1
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 10
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "664abc123def456789012345"
+ *                       productName:
+ *                         type: string
+ *                         example: "Wireless Headphones"
+ *                       price:
+ *                         type: number
+ *                         format: float
+ *                         example: 1299.99
+ *                       description:
+ *                         type: string
+ *                         example: "High quality wireless headphones with noise cancellation"
+ *                       productImage:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                         example: ["https://example.com/img1.jpg", "https://example.com/img2.jpg"]
+ *                       category:
+ *                         type: string
+ *                         description: MongoDB Category ID reference
+ *                         example: "663fff000aaa111222333444"
+ *                       brand:
+ *                         type: string
+ *                         example: "Sony"
+ *                       status:
+ *                         type: string
+ *                         enum: [active, inactive, out of stock, discontinued]
+ *                         example: "active"
+ *                       averageRating:
+ *                         type: number
+ *                         format: float
+ *                         example: 4.5
+ *                       totalReview:
+ *                         type: integer
+ *                         example: 128
+ *                       likesCount:
+ *                         type: integer
+ *                         example: 340
+ *                       stock:
+ *                         type: integer
+ *                         example: 25
+ *                       createdBy:
+ *                         type: string
+ *                         description: MongoDB User ID reference
+ *                         example: "662aaa111bbb222333444555"
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: failed to fetch products
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 router.get("/view", verifyToken, productController.getProducts);
 
@@ -234,7 +450,7 @@ router.get("/view/:id", verifyToken, productController.getProductById);
  *                       _id:
  *                         type: string
  *                         example: 64f123abc456
- *                       name:
+ *                       productName:
  *                         type: string
  *                         example: iPhone 14
  *                       description:
