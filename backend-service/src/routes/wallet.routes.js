@@ -166,6 +166,9 @@ router.get(
  *                     currentBalance:
  *                       type: number
  *                       example: 800
+ *                     totalReversed:
+ *                       type: number
+ *                       example: 1500
  *                 error:
  *                   type: string
  *                   example: null
