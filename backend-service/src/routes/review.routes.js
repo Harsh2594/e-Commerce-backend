@@ -57,7 +57,7 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *                 message:
  *                   type: string
  *                   example: Your review added successfully
- *                 review:
+ *                 data:
  *                   type: object
  *                   properties:
  *                     _id:
@@ -103,7 +103,24 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *       403:
  *         description: Forbidden - Admin not allowed
  *       500:
- *         description: Failed to add review
+ *         description: Failed to fetch reviews
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch reviews"
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 
 router.post("/add", verifyToken, notAnAdmin, reviewController.addReview);
@@ -168,7 +185,24 @@ router.post("/add", verifyToken, notAnAdmin, reviewController.addReview);
  *       403:
  *         description: Forbidden - Admin not allowed
  *       500:
- *         description: Failed to delete review
+ *         description: Failed to fetch reviews
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch reviews"
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 
 router.delete(
