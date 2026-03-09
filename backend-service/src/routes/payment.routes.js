@@ -39,6 +39,8 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *                 enum:
  *                   - success
  *                   - failed
+ *                   - pending
+ *                   - refunded
  *                 example: success
  *     responses:
  *       200:
@@ -71,7 +73,8 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *                       example: success
  *                     transactionId:
  *                       type: string
- *                       example: SBI-1705839200000
+ *                       format: uuid
+ *                       example: "550e8400-e29b-41d4-a716-446655440000"
  *                 error:
  *                   type: string
  *                   example: null
