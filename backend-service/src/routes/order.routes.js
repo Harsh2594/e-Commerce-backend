@@ -16,8 +16,8 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  * @swagger
  * /api/orders/create:
  *   post:
- *     summary: Create a new order
- *     description: Create an order from the user's cart items. Cart will be cleared after successful order creation. Requires JWT authentication.
+ *     summary: Create order from cart
+ *     description: Creates a new order from the user's cart after validating stock and applying reward points.
  *     tags:
  *       - Orders
  *     security:
@@ -34,25 +34,14 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *             properties:
  *               paymentMethod:
  *                 type: string
+ *                 enum:
+ *                   - COD
+ *                   - CARD
+ *                   - UPI
  *                 example: COD
  *               shippingAddress:
- *                 type: object
- *                 properties:
- *                   address:
- *                     type: string
- *                     example: 202 Swaroop Nagar
- *                   city:
- *                     type: string
- *                     example: Kanpur
- *                   state:
- *                     type: string
- *                     example: UP
- *                   pincode:
- *                     type: string
- *                     example: 123456
- *                   country:
- *                     type: string
- *                     example: India
+ *                 type: string
+ *                 example: "123 Main Street, Delhi, India"
  *     responses:
  *       201:
  *         description: Order placed successfully
@@ -72,10 +61,14 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *                   properties:
  *                     _id:
  *                       type: string
- *                       example: 64order123456
+ *                       example: "664abc123def456789012345"
+ *                     publicId:
+ *                       type: string
+ *                       example: "ORD-1001"
  *                     user:
  *                       type: string
- *                       example: 64user123456
+ *                       description: MongoDB User ID reference
+ *                       example: "663fff000aaa111222333444"
  *                     items:
  *                       type: array
  *                       items:
@@ -83,30 +76,58 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *                         properties:
  *                           product:
  *                             type: string
- *                             example: 64prod123456
+ *                             example: "662aaa111bbb222333444555"
  *                           price:
  *                             type: number
- *                             example: 79999
+ *                             example: 500.00
  *                           quantity:
  *                             type: integer
- *                             example: 1
+ *                             example: 3
+ *                           sourcePost:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
  *                     totalAmount:
  *                       type: number
- *                       example: 79999
+ *                       example: 1500
+ *                     redeemedPoints:
+ *                       type: number
+ *                       example: 150
+ *                     finalAmount:
+ *                       type: number
+ *                       example: 1350
  *                     paymentMethod:
  *                       type: string
+ *                       enum:
+ *                         - COD
+ *                         - CARD
+ *                         - UPI
  *                       example: COD
  *                     paymentStatus:
  *                       type: string
+ *                       enum:
+ *                         - pending
+ *                         - paid
+ *                         - failed
  *                       example: pending
- *                     status:
+ *                     shippingAddress:
  *                       type: string
+ *                       example: "123 Main Street, Delhi, India"
+ *                     orderStatus:
+ *                       type: string
+ *                       enum:
+ *                         - pending
+ *                         - confirmed
+ *                         - shipped
+ *                         - delivered
+ *                         - cancelled
  *                       example: pending
  *                 error:
  *                   type: string
+ *                   nullable: true
  *                   example: null
- *       200:
- *         description: Cart is empty
+ *       400:
+ *         description: Validation error or insufficient stock
  *         content:
  *           application/json:
  *             schema:
@@ -114,20 +135,79 @@ const notAnAdmin = require("../middlewares/notAnAdmin");
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *                   example: false
  *                 message:
  *                   type: string
- *                   example: Cart is Empty
  *                 data:
- *                   type: array
- *                   example: []
- *                 error:
- *                   type: string
+ *                   nullable: true
  *                   example: null
+ *                 error:
+ *                   nullable: true
+ *                   example: null
+ *             examples:
+ *               payment_method_required:
+ *                 summary: Missing payment method
+ *                 value:
+ *                   success: false
+ *                   message: "Payment method is required"
+ *                   data: null
+ *                   error: null
+ *               payment_method_invalid:
+ *                 summary: Invalid payment method
+ *                 value:
+ *                   success: false
+ *                   message: "Invalid payment method. Allowed values: COD, CARD, UPI"
+ *                   data: null
+ *                   error: null
+ *               shipping_address_required:
+ *                 summary: Missing shipping address
+ *                 value:
+ *                   success: false
+ *                   message: "Shipping address is required"
+ *                   data: null
+ *                   error: null
+ *               cart_empty:
+ *                 summary: Cart is empty
+ *                 value:
+ *                   success: false
+ *                   message: "Cart is Empty"
+ *                   data: []
+ *                   error: null
+ *               product_unavailable:
+ *                 summary: Product inactive or deleted
+ *                 value:
+ *                   success: false
+ *                   message: "Product \"Wireless Headphones\" is unavailable"
+ *                   data: null
+ *                   error: null
+ *               insufficient_stock:
+ *                 summary: Not enough stock
+ *                 value:
+ *                   success: false
+ *                   message: "Insufficient stock for \"Wireless Headphones\""
+ *                   data: null
+ *                   error: null
  *       401:
  *         description: Unauthorized
  *       500:
  *         description: Failed to create order
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to create order"
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 
 router.post("/create", verifyToken, notAnAdmin, orderController.createOrder);
